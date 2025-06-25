@@ -31,7 +31,11 @@ class SyncVariationsCommand extends Command
      */
     public function handle(): void
     {
-        $this->getVariations()->each(fn (Product $variation) => SyncVariationsJob::dispatch($variation));
+        $variations = $this->getVariations();
+
+        $this->info("Found {$variations->count()} variations to sync.");
+
+        $variations->each(fn (Product $variation) => SyncVariationsJob::dispatch($variation));
     }
 
     /**
