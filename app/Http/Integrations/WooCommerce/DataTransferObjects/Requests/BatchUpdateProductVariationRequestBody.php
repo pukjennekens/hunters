@@ -11,6 +11,13 @@ use Spatie\LaravelData\Data;
 
 class BatchUpdateProductVariationRequestBody extends Data
 {
+    public function __construct()
+    {
+        $this->create = collect();
+        $this->update = collect();
+        $this->delete = collect();
+    }
+
     public int $productId;
 
     /**

@@ -25,6 +25,10 @@ class ShopifyProductVariantToWooCommerceProductVariationMapper
         $wooCommerceProductVariation->salePrice = $shopifyVariant->price;
         $wooCommerceProductVariation->sku = $shopifyVariant->sku;
 
+        if (! isset($wooCommerceProductVariation->attributes)) {
+            $wooCommerceProductVariation->attributes = collect();
+        }
+
         if (! empty($shopifyVariant->option1)) {
             $option1ProductVariationAttribute = new ProductVariationAttribute;
             $option1ProductVariationAttribute->name = $shopifyProduct->options->get(0)?->name;

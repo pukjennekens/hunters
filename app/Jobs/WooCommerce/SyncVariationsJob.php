@@ -35,14 +35,17 @@ class SyncVariationsJob implements ShouldQueue
         protected Product $product,
         protected ?ShopifyProduct $shopifyProduct = null,
     ) {
-        if (! empty($this->product->woocommerce_product_id)) {
+        if (empty($this->product->woocommerce_product_id)) {
             $this->delete();
+
             return;
         }
 
         if (! $this->shopifyProduct) {
             $this->shopifyProduct = $this->getShopifyProduct();
         }
+
+        $this->product->load(['variations', 'images']);
     }
 
     /**
@@ -53,35 +56,35 @@ class SyncVariationsJob implements ShouldQueue
         $batchUpdateProductVariationRequestBody = new BatchUpdateProductVariationRequestBody;
         $batchUpdateProductVariationRequestBody->productId = (int) $this->product->woocommerce_product_id;
 
-        $batchUpdateProductVariationRequestBody->create = $this->mapVariationsCollectionToWooCommerceVariationsCollection(
-            $this->getCreatableVariations()
-        );
+        $creatableVariations = $this->getCreatableVariations();
+        $updatableVariations = $this->getUpdatableVariations();
+        $deletableVariations = $this->getDeletableVariations();
 
-        $batchUpdateProductVariationRequestBody->update = $this->mapVariationsCollectionToWooCommerceVariationsCollection(
-            $this->getUpdatableVariations()
-        );
-
-        $batchUpdateProductVariationRequestBody->delete = $this->mapVariationsCollectionToWooCommerceVariationsCollection(
-            $this->getDeletableVariations()
-        );
+        $batchUpdateProductVariationRequestBody->create = $this->mapVariationsCollectionToWooCommerceVariationsCollection($creatableVariations);
+        $batchUpdateProductVariationRequestBody->update = $this->mapVariationsCollectionToWooCommerceVariationsCollection($updatableVariations);
+        $batchUpdateProductVariationRequestBody->delete = $this->mapVariationsCollectionToWooCommerceVariationsCollection($deletableVariations);
 
         /**
          * @var BatchUpdateProductVariationRequestBody $responseBatchWooCommerceProductVariation
          */
-        $responseBatchWooCommerceProductVariation = $wooCommerceConnector->debug()->send(new BatchUpdateProductVariationsRequest($batchUpdateProductVariationRequestBody))->dtoOrFail();
+        $responseBatchWooCommerceProductVariation = $wooCommerceConnector->send(new BatchUpdateProductVariationsRequest($batchUpdateProductVariationRequestBody))->dtoOrFail();
 
-        $this->getCreatableVariations()
-            ->each(fn (Variation $variation, int $index) => $variation->update([
-                'woocommerce_variation_id' => $responseBatchWooCommerceProductVariation->create->get($index)?->id,
-                'woocommerce_variation_synced_at' => $responseBatchWooCommerceProductVariation->create->get($index)?->dateModified,
-            ]));
+        $creatableVariations
+            ->each(function (Variation $variation, int $index) use ($responseBatchWooCommerceProductVariation): void {
+                $variation->update([
+                    'woocommerce_variation_id' => $responseBatchWooCommerceProductVariation->create->get($index)?->id,
+                    'woocommerce_variation_synced_at' => $responseBatchWooCommerceProductVariation->create->get($index)?->dateModified,
+                ]);
+            });
 
-        $this->getUpdatableVariations()
-            ->each(fn (Variation $variation, int $index) => $variation->update([
-                'woocommerce_variation_synced_at' => $responseBatchWooCommerceProductVariation->update->get($index)?->dateModified,
-            ]));
+        $updatableVariations
+            ->each(function (Variation $variation, int $index) use ($responseBatchWooCommerceProductVariation): void {
+                $variation->update([
+                    'woocommerce_variation_synced_at' => $responseBatchWooCommerceProductVariation->update->get($index)?->dateModified,
+                ]);
+            });
 
-        $this->getDeletableVariations()->each(fn (Variation $variation) => $variation->delete());
+        $deletableVariations->each(fn (Variation $variation) => $variation->delete());
 
         $singleChoiceOptions = $this->shopifyProduct?->options->filter(fn (Option $option): bool => count($option->values) === 1);
 
@@ -155,7 +158,7 @@ class SyncVariationsJob implements ShouldQueue
                 throw new Exception('Shopify product not found for the variation: '.$variation->shopify_variation_id);
             }
 
-            return app(ShopifyProductVariantToWooCommerceProductVariationMapper::class)->map($this->shopifyProduct, $shopifyVariant);
+            return app(ShopifyProductVariantToWooCommerceProductVariationMapper::class)->map($this->shopifyProduct, $shopifyVariant, $variation);
         });
     }
 }
