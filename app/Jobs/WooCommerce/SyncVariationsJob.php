@@ -36,9 +36,7 @@ class SyncVariationsJob implements ShouldQueue
         protected ?ShopifyProduct $shopifyProduct = null,
     ) {
         if (! empty($this->product->woocommerce_product_id)) {
-            $this->product->delete();
             $this->delete();
-
             return;
         }
 

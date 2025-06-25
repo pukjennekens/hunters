@@ -44,7 +44,7 @@ class SyncVariationsCommand extends Command
                 ->whereNotNull('shopify_variation_id')
                 ->whereNull('woocommerce_variation_id')
             )
-            ->whereHas('variations', fn (Builder $query): Builder => $query
+            ->orWhereHas('variations', fn (Builder $query): Builder => $query
                 ->whereColumn('woocommerce_variation_synced_at', '<', 'shopify_variation_updated_at')
             )
             ->orWhereHas('variations', fn (Builder $query): Builder => $query
