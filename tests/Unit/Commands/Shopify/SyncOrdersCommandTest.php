@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Commands\Shopify;
 
 use App\Console\Commands\Shopify\SyncOrdersCommand;
@@ -13,7 +15,7 @@ use Tests\TestCase;
 
 class SyncOrdersCommandTest extends TestCase
 {
-    public function testItDoesNotFetchUnprocessableOrders(): void
+    public function test_it_does_not_fetch_unprocessable_orders(): void
     {
         Order::factory()
             ->create([
@@ -38,7 +40,7 @@ class SyncOrdersCommandTest extends TestCase
         $this->assertCount(0, $result);
     }
 
-    public function testItFetchesProcessableOrders(): void
+    public function test_it_fetches_processable_orders(): void
     {
         Order::factory()
             ->create([
@@ -63,7 +65,7 @@ class SyncOrdersCommandTest extends TestCase
         $this->assertCount(2, $result);
     }
 
-    public function testItDispatchesTheSyncOrderJob(): void
+    public function test_it_dispatches_the_sync_order_job(): void
     {
         Queue::fake();
 
@@ -79,7 +81,7 @@ class SyncOrdersCommandTest extends TestCase
 
         $commandMock->handle();
 
-        Queue::assertPushed(SyncOrderJob::class, function(SyncOrderJob $job) use ($orderMock): bool {
+        Queue::assertPushed(SyncOrderJob::class, function (SyncOrderJob $job) use ($orderMock): bool {
             $jobReflection = new ReflectionClass($job);
 
             $this->assertSame($orderMock, $jobReflection->getProperty('order')->getValue($job));

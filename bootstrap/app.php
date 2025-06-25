@@ -8,6 +8,7 @@ use App\Console\Commands\Shopify\SyncOrdersCommand as ShopifySyncOrdersCommand;
 use App\Console\Commands\WooCommerce\ImportOrdersCommand as WooCommerceImportOrdersCommand;
 use App\Console\Commands\WooCommerce\SyncOrdersCommand as WooCommerceSyncOrdersCommand;
 use App\Console\Commands\WooCommerce\SyncProductsCommand as WooCommerceSyncProductsCommand;
+use App\Console\Commands\WooCommerce\SyncVariationsCommand as WooCommerceSyncVariationsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command(ShopifyImportProductsCommand::class)->hourly();
         $schedule->command(WooCommerceSyncProductsCommand::class)->hourlyAt(30);
+        $schedule->command(WooCommerceSyncVariationsCommand::class)->hourlyAt(15);
 
         $schedule->command(WooCommerceImportOrdersCommand::class)->hourly();
         $schedule->command(ShopifySyncOrdersCommand::class)->hourlyAt(30);

@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Saloon\Exceptions\Request\FatalRequestException;
 use Saloon\Exceptions\Request\RequestException;
@@ -47,6 +48,21 @@ class ImportProductsJob implements ShouldQueue
         $request->query()->add('published_status', 'published');
         $request->query()->add('status', 'active');
 
+        if (! $this->force) {
+            $latestProduct = Product::query()
+                ->latest('shopify_product_updated_at')
+                ->first();
+
+            if ($latestProduct && $latestProduct->shopify_product_updated_at) {
+                $request->query()->add(
+                    'updated_at_min',
+                    Carbon::createFromTimestamp($latestProduct->shopify_product_updated_at)
+                        ->addSecond()
+                        ->format(ShopifyConnector::DATE_FORMAT)
+                );
+            }
+        }
+
         /**
          * @var Collection<int, ShopifyProduct> $shopifyProducts
          */
@@ -79,6 +95,8 @@ class ImportProductsJob implements ShouldQueue
             $shopifyProduct->variants
                 ->each(fn (Variant $shopifyVariant) => $product->variations()->updateOrCreate([
                     'shopify_variation_id' => $shopifyVariant->id,
+                ], [
+                    'shopify_variation_updated_at' => $shopifyVariant->updatedAt,
                 ]));
 
             $shopifyProduct->images->each(fn (Image $shopifyImage) => $product->images()->updateOrCreate([

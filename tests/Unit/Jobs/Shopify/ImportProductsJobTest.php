@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Jobs\Shopify;
 
+use App\Http\Integrations\Shopify\DataTransferObjects\Product as ShopifyProduct;
 use App\Http\Integrations\Shopify\Requests\Products\ListProductsRequest;
 use App\Http\Integrations\Shopify\ShopifyConnector;
 use App\Jobs\Shopify\ImportProductsJob;
@@ -14,11 +17,10 @@ use Tests\Fixtures\Integrations\Shopify\ImageFixture;
 use Tests\Fixtures\Integrations\Shopify\ProductFixture;
 use Tests\Fixtures\Integrations\Shopify\VariantFixture;
 use Tests\TestCase;
-use App\Http\Integrations\Shopify\DataTransferObjects\Product as ShopifyProduct;
 
 class ImportProductsJobTest extends TestCase
 {
-    public function testItImportsTheProducts(): void
+    public function test_it_imports_the_products(): void
     {
         $productId = fake()->unique()->randomNumber();
         $productCategory = fake()->word();
@@ -64,7 +66,7 @@ class ImportProductsJobTest extends TestCase
 
         $this->assertDatabaseHas('products', [
             'shopify_product_id' => $productId,
-            'product_name' =>  $productTitle,
+            'product_name' => $productTitle,
             'shopify_product_updated_at' => $productUpdatedAt,
             'product_category_id' => $productCategoryId,
         ]);
@@ -79,7 +81,7 @@ class ImportProductsJobTest extends TestCase
         ]);
     }
 
-    public function testItFetchesOnlyApplicableProducts(): void
+    public function test_it_fetches_only_applicable_products(): void
     {
         Saloon::fake([
             ListProductsRequest::class => MockResponse::make(['products' => []]),
@@ -89,7 +91,7 @@ class ImportProductsJobTest extends TestCase
             app()->make(ShopifyConnector::class)
         );
 
-        Saloon::assertSent(function(ListProductsRequest $request): bool {
+        Saloon::assertSent(function (ListProductsRequest $request): bool {
             $this->assertEquals(250, $request->query()->get('limit'));
             $this->assertEquals('published', $request->query()->get('published_status'));
             $this->assertEquals('active', $request->query()->get('status'));
@@ -98,7 +100,7 @@ class ImportProductsJobTest extends TestCase
         });
     }
 
-    public function testItNullsNonExistingProducts(): void
+    public function test_it_nulls_non_existing_products(): void
     {
         $existingProductId = fake()->unique()->randomNumber();
 
@@ -131,7 +133,7 @@ class ImportProductsJobTest extends TestCase
         $this->assertNull($nonExistingProduct->shopify_product_id);
     }
 
-    public function testItNullsNonExistingVariants(): void
+    public function test_it_nulls_non_existing_variants(): void
     {
         $productId = fake()->unique()->randomNumber();
         $existingVariantId = fake()->unique()->randomNumber();
@@ -157,7 +159,7 @@ class ImportProductsJobTest extends TestCase
                 'shopify_product_id' => $productId,
             ]);
 
-        (new ImportProductsJob())->handle(
+        (new ImportProductsJob)->handle(
             app()->make(ShopifyConnector::class)
         );
 

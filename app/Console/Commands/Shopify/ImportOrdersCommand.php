@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Shopify;
 
+use App\Enums\OrderStatusEnum;
 use App\Http\Integrations\Shopify\DataTransferObjects\Order as ShopifyOrder;
 use App\Http\Integrations\Shopify\Requests\Orders\ListOrdersRequest;
 use App\Http\Integrations\Shopify\ShopifyConnector;
-use App\Enums\OrderStatusEnum;
 use App\Models\Order;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;

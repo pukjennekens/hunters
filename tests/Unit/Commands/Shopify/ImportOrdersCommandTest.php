@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Commands\Shopify;
 
 use App\Console\Commands\Shopify\ImportOrdersCommand;
 use App\Enums\OrderStatusEnum;
+use App\Http\Integrations\Shopify\DataTransferObjects\Order as ShopifyOrder;
 use App\Http\Integrations\Shopify\Requests\Orders\ListOrdersRequest;
 use App\Models\Order;
 use Illuminate\Support\Carbon;
@@ -12,11 +15,10 @@ use Saloon\Http\Faking\MockResponse;
 use Saloon\Laravel\Facades\Saloon;
 use Tests\Fixtures\Integrations\Shopify\OrderFixture;
 use Tests\TestCase;
-use App\Http\Integrations\Shopify\DataTransferObjects\Order as ShopifyOrder;
 
 class ImportOrdersCommandTest extends TestCase
 {
-    public function testItDoesNotFetchUnprocessableOrders(): void
+    public function test_it_does_not_fetch_unprocessable_orders(): void
     {
         Order::factory()
             ->count(4)
@@ -38,14 +40,14 @@ class ImportOrdersCommandTest extends TestCase
 
         $commandMock->getOrders();
 
-        Saloon::assertSent(function(ListOrdersRequest $request): bool {
+        Saloon::assertSent(function (ListOrdersRequest $request): bool {
             $this->assertEmpty($request->query()->get('updated_at_min'));
 
             return true;
         });
     }
 
-    public function testItOnlyFetchesLastUpdatedOrders(): void
+    public function test_it_only_fetches_last_updated_orders(): void
     {
         $latestChange = fake()->dateTime();
 
@@ -71,7 +73,7 @@ class ImportOrdersCommandTest extends TestCase
 
         $commandMock->getOrders();
 
-        Saloon::assertSent(function(ListOrdersRequest $request) use ($latestChange): bool {
+        Saloon::assertSent(function (ListOrdersRequest $request) use ($latestChange): bool {
             $this->assertTrue(Carbon::parse($request->query()->get('updated_at_min'))->equalTo(
                 Carbon::parse($latestChange)
             ));
@@ -80,7 +82,7 @@ class ImportOrdersCommandTest extends TestCase
         });
     }
 
-    public function testItUpdatesTheOrders(): void
+    public function test_it_updates_the_orders(): void
     {
         $orderId = fake()->unique()->randomNumber();
         $newUpdatedAt = fake()->dateTime();
@@ -101,7 +103,7 @@ class ImportOrdersCommandTest extends TestCase
             ]]),
         ]);
 
-        (new ImportOrdersCommand())->handle();
+        (new ImportOrdersCommand)->handle();
 
         $order->refresh();
 

@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Commands\Shopify;
 
 use App\Console\Commands\Shopify\ImportProductsCommand;
 use App\Jobs\Shopify\ImportProductsJob;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use ReflectionClass;
 use Tests\TestCase;
-use Illuminate\Support\Facades\Queue;
 
 class ImportProductsCommandTest extends TestCase
 {
-    public function testItDispatchesTheImportProductsJob(): void
+    public function test_it_dispatches_the_import_products_job(): void
     {
         Queue::fake();
 
@@ -25,7 +27,7 @@ class ImportProductsCommandTest extends TestCase
         $commandMock->expects('handle')->passthru();
         $commandMock->handle();
 
-        Queue::assertPushed(ImportProductsJob::class, function(ImportProductsJob $job): bool {
+        Queue::assertPushed(ImportProductsJob::class, function (ImportProductsJob $job): bool {
             $jobReflection = new ReflectionClass($job);
             $this->assertFalse($jobReflection->getProperty('force')->getValue($job));
 
@@ -33,7 +35,7 @@ class ImportProductsCommandTest extends TestCase
         });
     }
 
-    public function testItDispatchesTheImportProductsJobWithForce(): void
+    public function test_it_dispatches_the_import_products_job_with_force(): void
     {
         Queue::fake();
 
@@ -47,7 +49,7 @@ class ImportProductsCommandTest extends TestCase
         $commandMock->expects('handle')->passthru();
         $commandMock->handle();
 
-        Queue::assertPushed(ImportProductsJob::class, function(ImportProductsJob $job): bool {
+        Queue::assertPushed(ImportProductsJob::class, function (ImportProductsJob $job): bool {
             $jobReflection = new ReflectionClass($job);
             $this->assertTrue($jobReflection->getProperty('force')->getValue($job));
 
