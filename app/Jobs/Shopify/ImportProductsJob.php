@@ -44,29 +44,28 @@ class ImportProductsJob implements ShouldQueue
     public function handle(ShopifyConnector $shopifyConnector): void
     {
         $request = new ListProductsRequest;
-        $request->query()->add('limit', 250);
         $request->query()->add('published_status', 'published');
         $request->query()->add('status', 'active');
 
-        if (! $this->force) {
-            $latestProduct = Product::query()
-                ->latest('shopify_product_updated_at')
-                ->first();
-
-            if ($latestProduct && $latestProduct->shopify_product_updated_at) {
-                $request->query()->add(
-                    'updated_at_min',
-                    Carbon::createFromTimestamp($latestProduct->shopify_product_updated_at)
-                        ->addSecond()
-                        ->format(ShopifyConnector::DATE_FORMAT)
-                );
-            }
-        }
+//        if (! $this->force) {
+//            $latestProduct = Product::query()
+//                ->latest('shopify_product_updated_at')
+//                ->first();
+//
+//            if ($latestProduct && $latestProduct->shopify_product_updated_at) {
+//                $request->query()->add(
+//                    'updated_at_min',
+//                    Carbon::createFromTimestamp($latestProduct->shopify_product_updated_at)
+//                        ->addSecond()
+//                        ->format(ShopifyConnector::DATE_FORMAT)
+//                );
+//            }
+//        }
 
         /**
          * @var Collection<int, ShopifyProduct> $shopifyProducts
          */
-        $shopifyProducts = $shopifyConnector->send($request)->dto();
+        $shopifyProducts = $shopifyConnector->debug()->paginate($request)->collect();
 
         $shopifyProducts->each(function (ShopifyProduct $shopifyProduct): void {
             if (! empty($shopifyProduct->product_type)) {

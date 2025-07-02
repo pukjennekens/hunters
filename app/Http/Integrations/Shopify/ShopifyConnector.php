@@ -53,7 +53,7 @@ class ShopifyConnector extends Connector implements HasPagination
 
             protected function isLastPage(Response $response): bool
             {
-                return ! empty($this->getCursors($response)['next']);
+                return ! isset($this->getCursors($response)['next']) || empty($this->getCursors($response)['next']);
             }
 
             protected function getPageItems(Response $response, Request $request): array
