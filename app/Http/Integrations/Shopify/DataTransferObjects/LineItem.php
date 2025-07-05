@@ -20,7 +20,7 @@ class LineItem extends Data
     public string $price;
 
     #[MapName('product_id')]
-    public int $productId;
+    public ?int $productId;
 
     public int $quantity;
 

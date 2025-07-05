@@ -57,7 +57,7 @@ class Order extends Data
     public CustomerAddress $billingAddress;
 
     #[MapName('shipping_address')]
-    public CustomerAddress $shippingAddress;
+    public ?CustomerAddress $shippingAddress;
 
     #[MapName('buyer_accepts_marketing')]
     public bool $buyerAcceptsMarketing = false;
@@ -71,7 +71,7 @@ class Order extends Data
     public ?Carbon $cancelledAt;
 
     #[MapName('fulfillment_status')]
-    public FulfillmentStatusEnum $fulfillmentStatus;
+    public ?FulfillmentStatusEnum $fulfillmentStatus;
 
     /**
      * @var Collection<int, LineItem> $lineItems
