@@ -23,7 +23,7 @@ class LineItem extends Data
          */
         #[DataCollectionOf(OrderTaxLine::class)]
         public readonly Collection $taxes,
-        public readonly string $sku,
+        public readonly ?string $sku,
         public readonly string $price,
     ) {}
 

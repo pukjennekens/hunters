@@ -14,4 +14,5 @@ enum OrderStatusEnum: string
     case REFUNDED = 'refunded';
     case FAILED = 'failed';
     case TRASH = 'trash';
+    case CHECKOUT_DRAFT = 'checkout-draft';
 }
